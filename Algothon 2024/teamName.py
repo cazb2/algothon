@@ -28,16 +28,8 @@ def getMyPosition(prcSoFar):
     #     if p_value < 0.05:
     #         stationary_instruments.append(i)
 
-    window_size = 160
+    window_size = 250
     for i in stationary_instruments:
-        # if i == 7:
-        #     window_size = 90
-        # elif i == 28:
-        #     window_size = 142 
-        # elif i == 43:
-        #     window_size = 185
-        # else:
-        #     window_size = 155
         rolling_window = prcSoFar[i, -window_size:]
         moving_average = np.mean(rolling_window)
         moving_std_dev = np.std(rolling_window)
@@ -46,11 +38,11 @@ def getMyPosition(prcSoFar):
         if prcSoFar[i, -1] < moving_average - 2 * moving_std_dev:
             if newPos[i] < 0:
                 newPos[i] = 0
-            newPos[i] += 1
+            newPos[i] += 6
         elif prcSoFar[i, -1] > moving_average + 2 * moving_std_dev:
             if newPos[i] > 0:
                 newPos[i] = 0
-            newPos[i] -= 1
+            newPos[i] -= 6
         
     currentPos = newPos
     return newPos
