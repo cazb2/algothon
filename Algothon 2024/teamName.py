@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 from statsmodels.tsa.stattools import acf
+from statsmodels.tsa.stattools import adfuller
 
 ##### TODO #########################################
 ### RENAME THIS FILE TO YOUR TEAM NAME #############
@@ -12,23 +13,44 @@ nInst = 50
 currentPos = np.zeros(nInst)
 position_size = 1000
 
+
 def getMyPosition(prcSoFar):
     global currentPos
-    # Score: -0.38
     (nInst, nt) = prcSoFar.shape
-    newPos = np.zeros(nInst)
+    newPos = currentPos
 
-    daily_returns = np.diff(prcSoFar) / prcSoFar[:, :-1]
-    std_devs = np.std(daily_returns, axis=1)
-    mean_std_dev = np.mean(std_devs)
+    stationary_instruments = [7,28,43,49]
 
-    for i in range(nInst):
-        lag1_acf = acf(prcSoFar[i, :], nlags=1)
-        if (std_devs[i] < mean_std_dev) and (lag1_acf[1] < 0.98): continue
-        if prcSoFar[i,-1] < prcSoFar[i,-2]:
-            newPos[i] = -1
-        else:
-            newPos[i] = 1
+    # for i in range(nInst):
+    #     adf_result = adfuller(prcSoFar[i, :])
+    #     p_value = adf_result[1]
+
+    #     if p_value < 0.05:
+    #         stationary_instruments.append(i)
+
+    window_size = 160
+    for i in stationary_instruments:
+        # if i == 7:
+        #     window_size = 90
+        # elif i == 28:
+        #     window_size = 142 
+        # elif i == 43:
+        #     window_size = 185
+        # else:
+        #     window_size = 155
+        rolling_window = prcSoFar[i, -window_size:]
+        moving_average = np.mean(rolling_window)
+        moving_std_dev = np.std(rolling_window)
+
+
+        if prcSoFar[i, -1] < moving_average - 2 * moving_std_dev:
+            if newPos[i] < 0:
+                newPos[i] = 0
+            newPos[i] += 1
+        elif prcSoFar[i, -1] > moving_average + 2 * moving_std_dev:
+            if newPos[i] > 0:
+                newPos[i] = 0
+            newPos[i] -= 1
         
     currentPos = newPos
     return newPos
