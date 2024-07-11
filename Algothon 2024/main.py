@@ -35,60 +35,65 @@ def getMyPosition(prcSoFar):
     global currentPos, signal_history
     (nInst, nt) = prcSoFar.shape
     newPos = currentPos
-
-    stationary_instruments = [7,28,43,49]
-
-    # for i in range(nInst):
-    #     adf_result = adfuller(prcSoFar[i, :])
-    #     p_value = adf_result[1]
-
-    #     if p_value < 0.05:
-    #         stationary_instruments.append(i)
-    mean_reversion_adjustment = 50
-    window_size = 250
-    for i in stationary_instruments:
-        rolling_window = prcSoFar[i, -window_size:]
-        moving_average = np.mean(rolling_window)
-        moving_std_dev = np.std(rolling_window)
+    for i in range(50):
+        newPos[i] = -np.Inf
 
 
-        if prcSoFar[i, -1] < moving_average - 2 * moving_std_dev:
-            if newPos[i] < 0:
-                newPos[i] = 0
-            newPos[i] += mean_reversion_adjustment
-        elif prcSoFar[i, -1] > moving_average + 2 * moving_std_dev:
-            if newPos[i] > 0:
-                newPos[i] = 0
-            newPos[i] -= mean_reversion_adjustment
+    # stationary_instruments = [7,28,43,49]
+
+    # # for i in range(nInst):
+    # #     adf_result = adfuller(prcSoFar[i, :])
+    # #     p_value = adf_result[1]
+
+    # #     if p_value < 0.05:
+    # #         stationary_instruments.append(i)
+    # mean_reversion_adjustment = 50
+    # window_size = 250
+    # for i in stationary_instruments:
+    #     rolling_window = prcSoFar[i, -window_size:]
+    #     moving_average = np.mean(rolling_window)
+    #     moving_std_dev = np.std(rolling_window)
+
+
+    #     if prcSoFar[i, -1] < moving_average - 2 * moving_std_dev:
+    #         if newPos[i] < 0:
+    #             newPos[i] = 0
+    #         newPos[i] += mean_reversion_adjustment
+    #     elif prcSoFar[i, -1] > moving_average + 2 * moving_std_dev:
+    #         if newPos[i] > 0:
+    #             newPos[i] = 0
+    #         newPos[i] -= mean_reversion_adjustment
     
 
-    instrument_pairs = [27, 38]
-    pair_adjustment = 50
+    # instrument_pairs = [27, 38]
+    # pair_adjustment = 50
 
-    log_inst_A = np.log(prcSoFar[instrument_pairs[0], -(1 + window):])
-    log_inst_B = np.log(prcSoFar[instrument_pairs[1], -(1 + window):])
-    y = log_inst_A[:-1]
-    X = log_inst_B[:-1]
-    # X = sm.add_constant(X) # Should we add a constant?
+    # log_inst_A = np.log(prcSoFar[instrument_pairs[0], -(1 + window):])
+    # log_inst_B = np.log(prcSoFar[instrument_pairs[1], -(1 + window):])
+    # y = log_inst_A[:-1]
+    # X = log_inst_B[:-1]
+    # # X = sm.add_constant(X) # Should we add a constant?
 
-    model = sm.OLS(y, X).fit()
-    n = model.params[0]
-    spread = log_inst_A[-1] - n * log_inst_B[-1]
-    residuals = model.resid
-    if adfuller(residuals)[1] >= 0.05:
-        # print(f'Not stationary for day:  + {nt}')
-        currentPos = newPos
-        return newPos
-    residual_std_dev = np.std(residuals, ddof=1)  # ddof=1 for sample standard deviation
+    # model = sm.OLS(y, X).fit()
+    # n = model.params[0]
+    # spread = log_inst_A[-1] - n * log_inst_B[-1]
+    # residuals = model.resid
+    # if adfuller(residuals)[1] >= 0.05:
+    #     # print(f'Not stationary for day:  + {nt}')
+    #     currentPos = newPos
+    #     return newPos
+    # residual_std_dev = np.std(residuals, ddof=1)  # ddof=1 for sample standard deviation
 
-    if spread < -2 * residual_std_dev:
-        # Instrument 1 is undervalued, Instrument 2 is overvalued
-        newPos[instrument_pairs[0]] += pair_adjustment
-        newPos[instrument_pairs[1]] -= pair_adjustment
-    elif spread > 2 * residual_std_dev:
-        # Instrument 2 is undervalued, Instrument 1 is overvalued
-        newPos[instrument_pairs[1]] += pair_adjustment
-        newPos[instrument_pairs[0]] -= pair_adjustment
+    # if spread < -2 * residual_std_dev:
+    #     # Instrument 1 is undervalued, Instrument 2 is overvalued
+    #     newPos[instrument_pairs[0]] += pair_adjustment
+    #     newPos[instrument_pairs[1]] -= pair_adjustment
+    # elif spread > 2 * residual_std_dev:
+    #     # Instrument 2 is undervalued, Instrument 1 is overvalued
+    #     newPos[instrument_pairs[1]] += pair_adjustment
+    #     newPos[instrument_pairs[0]] -= pair_adjustment
+
+
 
 
 
